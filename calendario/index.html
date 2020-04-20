@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calendario</title>
+    <script src="js/jquery.min.js"></script>
+    <script src="js/moment.min.js"></script>
+
+    <link rel="stylesheet" href="css/fullcalendar.min.css">
+    <link rel="stylesheet" href="css/bootstrap-clockpicker.css">
+    <script src="js/fullcalendar.min.js"></script>
+    <script src="js/es.js"></script>
+    <script src="js/bootstrap-clockpicker.js"></script>
+    
+
+    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js" ></script>
+<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css">
+
+<style>
+  
+</style>
+  </head>
+<body>
+
+  <div class="container">
+    <div class="row">
+      <div class="col"></div>
+      <center><div class="col7"><br><br> <div id="CalendarioWeb" style="width: 65%;" ></div></div></center>
+      <div  class="col"></div>
+    </div>
+  </div>
+  <script>
+    $(document).ready(function(){
+      $('#CalendarioWeb').fullCalendar({
+   header:{
+  left:   'today,prev,next',
+  center: 'title',
+  right:  'month, basicWeek, agendaDay '
+},
+
+dayClick:function(date,jsEvent,view){
+  $('#btncrear').prop("disabled",false);
+  $('#btnmodificar').prop("disabled",true);
+  $('#btnborrar').prop("disabled",true);
+
+  LimpiarCalendario();
+  $('#txtfecha').val(date.format());
+  $("#accionevento").modal();
+  
+},
+
+  events:'http://localhost/calendario/eventos.php',
+
+
+  
+eventClick: function(calEvent,jsEvent,view){
+
+  
+  $('#btncrear').prop("disabled",true);
+  $('#btnmodificar').prop("disabled",false);
+  $('#btnborrar').prop("disabled",false);
+
+    $('#titulo').html(calEvent.title);
+
+    $('#txtdescripcion').val(calEvent.descripcion);
+    $('#txtid').val(calEvent.id);
+    $('#txttitulo').val(calEvent.title);
+    $('#txtcolor').val(calEvent.color);
+
+    fechahora= calEvent.start._i.split(" ");
+    $('#txtfecha').val(fechahora[0]);
+    $('#txthora').val(fechahora[1]);
+
+    $("#accionevento").modal();           
+     },
+
+     editable:true,
+     eventDrop:function(calEvent){
+      $('#titulo').val(calEvent.title);
+      $('#txtdescripcion').val(calEvent.descripcion);
+      $('#txtid').val(calEvent.id);
+      $('#txttitulo').val(calEvent.title);
+      $('#txtcolor').val(calEvent.color);
+
+      fechahora= calEvent.start.format().split("T");
+      $('#txtfecha').val(fechahora[0]);
+      $('#txthora').val(fechahora[1]);
+
+      
+      RecolectarEventoGUI();
+      EnviarDatos('modificar',NuevoEvento,true);
+
+     }
+
+      })
+    });
+  </script>
+
+<div class="modal fade" id="accionevento" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header" id="titulo"><h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        
+          <input type="hidden" name="txtid" id="txtid">
+          <input type="hidden" name="txtfecha" id="txtfecha">
+
+          <div class="form-row">
+          <div class="form-group col-md-8"> 
+            <label>Titulo</label>
+            <input type="text" name="txttitulo" id="txttitulo" class="form-control" placeholder="Ingrese Titulo"></div>
+         
+          <div class="form-group col-md-4">
+            <label>Hora</label>
+            <div class="input-group clockpicker" data-autoclose="true">
+              <input type="text" name="txthora" id="txthora" value="10:00"  class="form-control"></div>
+          </div>
+            
+          
+        </div>
+          <div class="form-group">
+            <label >Descripcion</label>
+          <textarea name="txtdescripcion" id="txtdescripcion" cols="30" rows="10" class="form-control" style="height:100px;"></textarea>
+          </div>
+          <div class="form-group">
+            <label >Color</label>
+          <input type="color" name="txtcolor" id="txtcolor" value="#04B4AE" class="form-control" style="height: 50px;">
+        </div>
+       
+      </div>
+      <div class="modal-footer">
+        
+        <button type="button" class="btn btn-success" id="btncrear">Crear</button>
+        <button type="button" class="btn btn-primary" id="btnmodificar">Modificar</button>
+        <button type="button" class="btn btn-danger" id="btnborrar">Borrar</button>
+        <button type="button" class="btn btn-secondary" data-dismiss="modal" >Cancelar</button>
+        
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+var NuevoEvento
+$('#btncrear').click(function(){
+
+  RecolectarEventoGUI();
+  EnviarDatos('agregar',NuevoEvento);
+
+});
+
+$('#btnborrar').click(function(){
+
+RecolectarEventoGUI();
+EnviarDatos('eliminar',NuevoEvento);
+
+});
+
+$('#btnmodificar').click(function(){
+
+RecolectarEventoGUI();
+EnviarDatos('modificar',NuevoEvento);
+
+});
+
+ function RecolectarEventoGUI(){
+   NuevoEvento= {
+    id:$('#txtid').val(),
+    start:$("#txtfecha").val()+" "+ $("#txthora").val(),
+    title:$("#txttitulo").val(),
+    descripcion:$("#txtdescripcion").val(),
+    color:$("#txtcolor").val(),
+    textColor:"ffffff",
+    end:$("#txtfecha").val()+" "+ $("#txthora").val(),
+  };
+  }
+  function EnviarDatos(accion,objEvento,modal){
+    $.ajax({
+      type:'POST',
+      url:'eventos.php?accion='+accion,
+      data:objEvento,
+      success:function(msg){
+        if(msg){
+          $('#CalendarioWeb').fullCalendar('refetchEvents');  
+
+          if(!modal)
+          {$('#accionevento').modal('toggle');}
+          
+        }
+      },
+      error:function(){
+        alert("hay un error .. ");
+      }
+    })
+  }
+
+$('.clockpicker').clockpicker();
+function LimpiarCalendario(){
+      $('#titulo').val('');
+      $('#txtdescripcion').val('');
+      $('#txtid').val('');
+      $('#txttitulo').val('');
+      $('#txtcolor').val('');
+
+}
+</script>
+
+</body>
+
+</html>
